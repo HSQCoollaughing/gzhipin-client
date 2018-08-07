@@ -2,17 +2,21 @@
 * 大神界面路由容器*/
 import React,{Component}from 'react';
 import {connect} from 'react-redux'
-class Laoban extends Component{
 
+import UserList from '../../components/user-list/user-list'
+import {getUserList} from "../../redux/actions";
+
+class Laoban extends Component{
+  componentDidMount(){
+    this.props.getUserList('dashen');
+  }
   render(){
     return (
-      <div>
-        Laoban
-      </div>
+        <UserList userList={this.props.userList}></UserList>
     )
   }
 }
 export default connect(
-  state=>({}),
-  {}
+  state=>({userList:state.userList}),
+  {getUserList}
 )(Laoban)

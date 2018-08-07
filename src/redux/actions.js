@@ -3,9 +3,9 @@
 * 同步action
 * 异步action
 * */
-import {reqLogin,reqRegister,reqUpdateUser,reqUser} from '../api'
+import {reqLogin,reqRegister,reqUpdateUser,reqUser,reqUserList} from '../api'
 
-import {AUTH_SUCCESS,ERROR_MSG,RECEIVE_USER,RESET_USER} from './action-types'
+import {AUTH_SUCCESS,ERROR_MSG,RECEIVE_USER,RESET_USER,RECEIVE_USER_LIST} from './action-types'
 
 //同步action登录注册成功
 const authSuccess=(user)=>({type:AUTH_SUCCESS,data:user})
@@ -15,6 +15,9 @@ const errorMsg=(msg)=>({type:ERROR_MSG,data:msg})
 const receiveUser=(user)=>({type:RECEIVE_USER,data:user})
 //同步action重置用户信息
 export const resetUser=(msg)=>({type:RESET_USER,data:msg})
+//同步action 获取用户列表数据
+const receiveUserList=(userlist)=>({type:RECEIVE_USER_LIST,data:userlist})
+
 
 
 
@@ -91,6 +94,17 @@ export const getUser=()=>{
     }else{
       //发送同步action
       dispatch(resetUser(result.msg));
+    }
+  }
+}
+//异步获取同类型的数据
+export const getUserList=(type)=>{
+  return async dispath=>{
+    //发送异步请求，获取同类型数据
+    const response=await reqUserList(type);
+    const result=response.data;
+    if(result.code===0){
+      dispath(receiveUserList(result.data));
     }
   }
 }

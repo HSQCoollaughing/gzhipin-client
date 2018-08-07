@@ -5,8 +5,9 @@
 import {combineReducers} from 'redux'
 
 import {getRedirectTo} from '../utils/utils'
-import {AUTH_SUCCESS,ERROR_MSG,RECEIVE_USER,RESET_USER} from './action-types'
+import {AUTH_SUCCESS,ERROR_MSG,RECEIVE_USER,RESET_USER,RECEIVE_USER_LIST} from './action-types'
 
+//处理user数据相关的
 const initUser={
   username:'',
   type:'',
@@ -34,6 +35,19 @@ function user(state=initUser,action) {
   }
 
 }
+
+//处理userlist数据相关的，获取用户列表
+const initUserList=[];
+function userList(state=initUserList,action) {
+  switch (action.type){
+    case RECEIVE_USER_LIST:
+      return action.data;
+      break;
+    default:
+      return state;
+  }
+}
 export default combineReducers({
   user,
+  userList
 });
