@@ -3,9 +3,21 @@
 * 同步action
 * 异步action
 * */
-import {reqLogin,reqRegister,reqUpdateUser,reqUser,reqUserList} from '../api'
+import io from 'socket.io-client'
+import {
+  reqLogin,
+  reqRegister,
+  reqUpdateUser,
+  reqUser,
+  reqUserList,
+  reqChatMsgList,
+  reqReadMsg
+} from '../api'
 
-import {AUTH_SUCCESS,ERROR_MSG,RECEIVE_USER,RESET_USER,RECEIVE_USER_LIST} from './action-types'
+import {AUTH_SUCCESS,ERROR_MSG,RECEIVE_USER,
+  RESET_USER,RECEIVE_USER_LIST,RECEIVE_MSG_LIST,
+  RECEIVE_MSG
+} from './action-types'
 
 //同步action登录注册成功
 const authSuccess=(user)=>({type:AUTH_SUCCESS,data:user})
@@ -18,8 +30,53 @@ export const resetUser=(msg)=>({type:RESET_USER,data:msg})
 //同步action 获取用户列表数据
 const receiveUserList=(userlist)=>({type:RECEIVE_USER_LIST,data:userlist})
 
+//获取所有消息列表
+const receiveMsgList=({users,chatMsgs,userid})=>({type:RECEIVE_MSG_LIST,data:{users,chatMsgs,userid}})
+//获取一条信息
+const receiveMsg=({chatMsg,userid})=>({type:RECEIVE_MSG,data:{chatMsg,userid}});
 
 
+
+//单例对象 只创建一次
+//保存对象之前  判断对象是否创建
+//保存对象之后  保存对象
+function initIO(dispatch,userid) {
+  if(!io.socket){
+    //io是个函数socket保存到io中,保存到io中
+    io.socket=io('ws://localhost:4000');
+    //接受到服务器发送来的消息
+    io.socket.on('receiveMsg',function (chatMsg) {
+      console.log('接受到服务器发送来的消息',chatMsg);
+      //只有当时当前用户的消息的时候才显示保存
+      if(userid===chatMsg.from||userid===chatMsg.to){
+        dispatch(receiveMsg({chatMsg,userid}));
+      }
+    })
+  }
+}
+//获取所有消息列表
+async function getChatList(dispatch,userid) {
+  initIO(dispatch,userid);//创建socket对象
+  const response=await reqChatMsgList();
+  const result=response.data;
+  if(result.code===0){
+    const {users,chatMsgs}=result.data;
+    //分发action
+    dispatch(receiveMsgList({users,chatMsgs,userid}));
+  }
+}
+
+
+
+//发送消息异步action
+export const sendMsg=({from,to,content})=>{
+  return dispath=>{
+    console.log('发送消息',{from,to,content});
+    //向服务器发送消息
+
+    io.socket.emit('sendMsg',{from,to,content});//发送到服务器
+  }
+}
 
 
 //异步注册action
@@ -38,6 +95,7 @@ export const register=(user)=>{
     const result=response.data;
     //分发action
     if(result.code===0){//注册成功
+      getChatList(dispatch,result.data._id);
       //分发注册成功的action,调用同步的action
       dispatch(authSuccess(result.data));
     }else{//注册失败
@@ -60,6 +118,7 @@ export const login=(user)=>{
     const result=response.data;
     //分发action
     if(result.code===0){//注册成功
+      getChatList(dispatch,result.data._id);
       //分发注册成功的action,调用同步的action
       dispatch(authSuccess(result.data));
     }else{//注册失败
@@ -89,6 +148,7 @@ export const getUser=()=>{
     const response=await reqUser();
     const result=response.data;
     if(result.code===0){//请求成功
+      getChatList(dispatch,result.data._id);
         //发送同步action
         dispatch(receiveUser(result.data));
     }else{

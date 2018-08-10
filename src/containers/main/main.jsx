@@ -15,6 +15,7 @@ import Dashen from '../dashen/dashen'
 import Laoban from '../laoban/laoban'
 import Message from '../message/message'
 import Personal from '../personal/personal'
+import Chat from '../chat/chat'
 import NotFind from '../../components/not-find/not-find'
 import NavFooter from '../../components/nav-footer/nav-footer'
 
@@ -77,7 +78,7 @@ class Main extends Component{
     }
     //如果有userid，再分析redux中是否有_id;
     //读取user中的_id
-    const {user}=this.props;
+    const {user,unReadCount}=this.props;
     if(!user._id){//发送ajax请求数据显示页面
       return null;
     }else{//既有userid也有_id,正常登陆，有一种特殊情况，当请求的是根路径的时候‘/’
@@ -108,15 +109,16 @@ class Main extends Component{
           }
           <Route path='/laobaninfo' component={LaobanInfo}></Route>
           <Route path='/dasheninfo' component={DaShenInfo}></Route>
+          <Route path='/chat/:userid' component={Chat}></Route>
           <Route path='/notfind' component={NotFind}></Route>
         </Switch>
-        {currentNav?<NavFooter navList={navList}></NavFooter>:null}
+        {currentNav?<NavFooter navList={navList} unReadCount={unReadCount}></NavFooter>:null}
       </div>
     )
   }
 }
 
 export default connect(
-  state=>({user:state.user}),
+  state=>({user:state.user,unReadCount:state.chat.unReadCount}),
   {updateUser,getUser}
 )(Main)
